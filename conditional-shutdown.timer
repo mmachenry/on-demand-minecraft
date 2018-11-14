@@ -1,0 +1,8 @@
+[Unit]
+Description=Shutdown the Minecraft server if there has been no recent activity.
+
+[Timer]
+OnCalendar=*-*-* *:*:*
+
+[Install]
+WantedBy=conditional-shutdown.target

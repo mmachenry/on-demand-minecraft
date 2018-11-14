@@ -1,6 +1,4 @@
-#!/usr/bin/env stack
--- stack --resolver lts-12.5 --install-ghc runghc --package parsec
-module StopServerWithNoPlayers (main) where
+module Main (main) where
 
 import System.Exit (die)
 import System.Process (readProcess, callProcess)
@@ -28,7 +26,7 @@ main = do
   n <- getNumPlayersOnline
   if n > 0
   then putStrLn "Players are online."
-  else do d <- getLastActiveDateTime "test.log"
+  else do d <- getLastActiveDateTime "/data/logs/latest.log"
           putStrLn $ "Activity found at " ++ show d
           now <- zonedTimeToLocalTime <$> getZonedTime
           if addSeconds (60*10) d < now
@@ -37,7 +35,7 @@ main = do
 
 getNumPlayersOnline :: IO Int
 getNumPlayersOnline = do
-  output <- readProcess "/usr/bin/docker" ["exec", "mc", "rcon-cli", "list"] ""
+  output <- readProcess "/usr/local/bin/rcon-cli" ["list"] ""
   case parse playerList "" output of
     Left err -> die (show err)
     Right numPlayers -> return numPlayers
@@ -87,7 +85,9 @@ isActivity (LogEntry _ text) =
   isInfixOf "Starting Minecraft server" text || isInfixOf "Disconnected" text
 
 stopServer :: IO ()
-stopServer = callProcess "/usr/bin/docker" ["exec", "mc", "rcon-cli", "stop"]
+stopServer = do
+  callProcess "/usr/local/bin/rcon-cli" ["say", "Server inactive. Stopping."]
+  callProcess "/usr/local/bin/rcon-cli" ["stop"]
 
 addSeconds :: Real a => a -> LocalTime -> LocalTime
 addSeconds s = utcToLocalTime utc
